@@ -1,0 +1,165 @@
+<head>
+    <!-- Bootstrap include -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+    <!-- fontawsome -->
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.9.0/css/all.css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.9.0/css/v4-shims.css">
+
+    <!-- jquery 버전 유의 -->
+    <!-- slim/jquery, 3.1.0 윗 버전에서 ajax가 작동하지 않는 오류 확인 -->
+    <!-- Bootstrap의 CDN을 copy&paste 하되 Line 8의 버전만 3.1.0으로 수정하세요 -->
+    <script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0">
+</head>
+
+<body>
+    <div class="container">
+        <i class="fas fa-charging-station" style="font-size: 150px;color:rgb(132, 211, 132)"></i>
+        <h1> 포트폴리오 연동 <br>프로토타입</h1>
+        <br>
+
+        <div class="row justify-content-md-center">
+            <div class="col-lg">
+                <div id="portfolio-alert"></div>
+                <h3>포트폴리오를 조회합니다</h3>
+                <button class="btn btn-warning" id="portfolio-btn">조회하기</button>
+                <table class="table">
+                    <tbody id="portfolio-table">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div id="founder">
+            <div class="col-lg">
+                <div id="founder-alert"></div>
+                <h3>거래를 입력합니다</h3>
+                <input type="text" id="new-sharecode" name="new-sharecode" placeholder="종목"><br>
+                <input type="text" id="new-price" name="new-price" placeholder="가격"><br>
+                <input type="text" id="new-amount" name="new-amount" placeholder="수량"><br>
+
+                <button class="btn btn-primary" id="founder-btn">거래 입력</button>
+            </div>
+        </div>
+
+        <div class="row justify-content-md-center">
+            <div class="col-lg">
+                <div id="history-alert"></div>
+                <h3>거래 이력을 조회합니다</h3>
+                <input type="text" id="hsharecode" name="hsharecode" placeholder="종목"><br>
+                <button class="btn btn-warning" id="history-btn">조회하기</button>
+                
+                <div id="table"></div>
+            </div>
+        </div>
+    </div>
+</body>
+
+<script>
+    $("#founder-btn").click(()=>{
+
+        const nsharecode = $("#new-sharecode").val();
+        const nprice = $("#new-price").val();
+        const namount = $("#new-amount").val();        
+        const url = "/putTrading"
+
+        $.post(url, {nsharecode, nprice, namount}, (data, status)=>{
+
+            if(status == "success"){
+
+                $('#founder-alert').empty();
+                $('#founder-alert').append("<div id='success' class='alert alert-success'>거래생성에 성공했습니다!</div>");
+                $('#founder-alert').fadeIn(2000);
+                $('#founder-alert').fadeOut(4000);
+            }
+        })
+    })
+
+    $('#portfolio-btn').click(()=>{
+        const url = "/getPortfolio"
+
+        $.get(url, (data,status)=>{
+
+            if(status == "success"){
+
+                $('#portfolio-alert').empty();
+                $('#portfolio-alert').append("<div id='success' class='alert alert-success'>조회를 성공했습니다!</div>");
+                $('#portfolio-alert').fadeIn(2000);
+                $('#portfolio-alert').fadeOut(4000);
+
+                $('#portfolio-table').empty();
+                $('#portfolio-table').append("<th scope='row'>종목</th><th scope='row'>매입평균가격</th><th scope='row'>수량</th><th scope='row'>비중</th>");
+
+                portfolio = data;
+                AssetSum = 0;
+
+                for(var i = 0; i < portfolio.Count; i++ ){
+                    AssetSum = AssetSum + portfolio.HoldShare[i].Avg_price * portfolio.HoldShare[i].Amount
+                }
+                for(var i = 0; i < portfolio.Count; i++ ){
+
+                    if(portfolio.HoldShare[i].Amount == 0){
+                        continue
+                    } else {
+                        $('#portfolio-table').append("<tr><td>" + portfolio.HoldShare[i].ShareCode + "</td>"+ "<td>" + portfolio.HoldShare[i].Avg_price + "</td><td>" + portfolio.HoldShare[i].Amount + "</td><td>" + portfolio.HoldShare[i].Amount * portfolio.HoldShare[i].Avg_price / AssetSum + "</td></tr>");
+                    }
+                }
+            }
+        })
+    })
+
+
+    $('#history-btn').click(()=>{
+
+        const value = $("#hsharecode").val();
+        const url = "/getHistoryForShare";
+
+        $.get(url, {hsharecode: value}, (data,status)=>{
+
+            if(status=="success"){
+
+                $('#history-alert').empty()
+                $('#history-alert').append("<div id='success' class='alert alert-success'>조회를 성공했습니다!</div>");
+                $('#history-alert').fadeIn(1000);
+                $('#history-alert').fadeOut(4000);
+
+                parsedData = JSON.stringify(data);
+                
+                $('#table').empty()
+                $('#table').append(`<div>${status}</div>`)
+                $('#table').append(`<div>${parsedData[0].TxID}</div>`)
+
+            }
+        })
+    })
+</script>
+
+<style>
+    .container{
+        width: 100%;
+        height: 500px;
+        margin: 50px 50px;
+        padding: 20px 20px;
+        text-align: center;
+        position: absolute;
+        left: 50%;
+        transform:translateX(-50%);        
+    }
+
+    button{
+        margin: 20px 10px;
+    }
+
+    input{
+        width: 300px;
+        padding: 10px 8px;
+    }
+
+    .col-6{
+        padding: 20px 10px;
+    }
+</style>
