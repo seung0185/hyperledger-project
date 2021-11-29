@@ -62,12 +62,8 @@ func (s *SmartContract) Invoke(APIstub shim.ChaincodeStubInterface) sc.Response 
 
 	if function == "putTrading" {
 		return s.putTrading(APIstub, args)
-	} else if function == "getTrading" {
-		return s.getTrading(APIstub, args)
 	} else if function == "getHoldShare" {
 		return s.getHoldShare(APIstub, args)
-	} else if function == "getPortfolio" {
-		return s.getPortfolio(APIstub, args)
 	} else if function == "getHistoryForShare" {
 		return s.getHistoryForShare(APIstub, args)
 	} 
@@ -88,8 +84,9 @@ func (s *SmartContract) putTrading(APIstub shim.ChaincodeStubInterface, args []s
 	holdshare := HoldShare{}
 
 	k := 0
+	var i int
 
-	for i := 0; i < portfolio.Count; i++ {
+	for i = 0; i < portfolio.Count; i++ {
 
 		if portfolio.HoldShare[i].ShareCode == args[1]{
 			ChangePortfolio(APIstub, args, i, &portfolio, &holdshare)
@@ -104,7 +101,7 @@ func (s *SmartContract) putTrading(APIstub shim.ChaincodeStubInterface, args []s
 			k++
 		}
 	}
-	if k == portfolio.Count {
+	if k == i {
 		CreatePortfolio(APIstub, args, &portfolio, &holdshare)
 	}
 
@@ -120,21 +117,6 @@ func (s *SmartContract) putTrading(APIstub shim.ChaincodeStubInterface, args []s
 	return shim.Success(nil)
 }
 
-func (s *SmartContract) getTrading(APIstub shim.ChaincodeStubInterface, args []string) sc.Response {
-	if len(args) != 1 {
-		return shim.Error("Incorrect arguments. Expecting a key")
-	}
-
-	value, err := APIstub.GetState(args[0])
-	if err != nil {
-		return shim.Error("Failed to get hold with error")
-	}
-	if value == nil {
-		return shim.Error("HoldShare not found")
-	}
-	return shim.Success(value)
-}
-
 func  (s *SmartContract) getHoldShare(APIstub shim.ChaincodeStubInterface, args []string) sc.Response {
 	if len(args) != 1 {
 		return shim.Error("Incorrect arguments. Expecting a key")
@@ -143,20 +125,6 @@ func  (s *SmartContract) getHoldShare(APIstub shim.ChaincodeStubInterface, args 
 	value, err := APIstub.GetState(args[0])
 	if err != nil {
 		return shim.Error("Failed to get Hold share with error")
-	}
-	if value == nil {
-		return shim.Error("HoldShare not found")
-	}
-	return shim.Success(value)
-}
-
-func  (s *SmartContract) getPortfolio(APIstub shim.ChaincodeStubInterface, args []string) sc.Response {
-
-	key := args[0]
-
-	value, err := APIstub.GetState(key)
-	if err != nil {
-		return shim.Error("Failed to get hold with error")
 	}
 	if value == nil {
 		return shim.Error("HoldShare not found")
@@ -240,6 +208,7 @@ func ChangePortfolio(APIstub shim.ChaincodeStubInterface, args []string, i int, 
 	holdshare.Avg_price = (holdshare.Amount * holdshare.Avg_price + holdshare.RecentPrice * holdshare.ChangeAmount) / (holdshare.Amount + holdshare.ChangeAmount)
 	holdshare.Amount = holdshare.Amount + holdshare.ChangeAmount
 
+	portfolio.HoldShare = remove(portfolio.HoldShare, i)
 	portfolio.HoldShare = append(portfolio.HoldShare, *holdshare)
 	portfolio.Cash -= holdshare.ChangeAmount * holdshare.RecentPrice
 }

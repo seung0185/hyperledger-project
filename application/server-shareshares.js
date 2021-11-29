@@ -139,17 +139,9 @@ async function cc_call(fn_name, args, res){
 
     var result;
 
-    if(fn_name == 'putTradig'){
-        result = await contract.submitTransaction('putTradig', args[0], args[1], args[2], args[3]);
+    if(fn_name == 'putTrading'){
+        result = await contract.submitTransaction('putTrading', args[0], args[1], args[2], args[3]);
         const myobj = {result: "success"}
-        res.status(200).json(myobj)
-    }else if(fn_name == 'getTrading'){
-        result = await contract.evaluateTransaction('getTrading',args[0]);
-        const myobj = JSON.parse(result)
-        res.status(200).json(myobj)
-    }else if(fn_name == 'getPortfolio'){
-        result = await contract.evaluateTransaction('getPortfolio', args[0]);
-        const myobj = JSON.parse(result)
         res.status(200).json(myobj)
     }else if(fn_name == 'getHoldShare'){
         result = await contract.evaluateTransaction('getHoldShare', args[0]);

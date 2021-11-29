@@ -26,10 +26,10 @@ sleep 3
 
 # 넥소 연료탱크용량 (kg/ℓ)	6.33 / 156.6
 # cid, id, amount, date, place, price
-docker exec cli peer chaincode invoke -n shareshares -C mychannel -c '{"Args":["getTrading","trading"]}'  --peerAddresses peer0.org1.shareshares.com:7051 
+docker exec cli peer chaincode invoke -n shareshares -C mychannel -c '{"Args":["getHoldShare","trading"]}'  --peerAddresses peer0.org1.shareshares.com:7051 
 sleep 3
 
-docker exec cli peer chaincode invoke -n shareshares -C mychannel -c '{"Args":["getPortfolio","portfolio"]}'  --peerAddresses peer0.org1.shareshares.com:7051 
+docker exec cli peer chaincode invoke -n shareshares -C mychannel -c '{"Args":["getHoldShare","portfolio"]}'  --peerAddresses peer0.org1.shareshares.com:7051 
 sleep 3
 
 docker exec cli peer chaincode invoke -n shareshares -C mychannel -c '{"Args":["getHoldShare", "005930.KS"]}'  --peerAddresses peer0.org1.shareshares.com:7051
