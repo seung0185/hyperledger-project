@@ -89,14 +89,7 @@ func (s *SmartContract) putTrading(APIstub shim.ChaincodeStubInterface, args []s
 	for i = 0; i < portfolio.Count; i++ {
 
 		if portfolio.HoldShare[i].ShareCode == args[1]{
-			ChangePortfolio(APIstub, args, i, &portfolio, &holdshare)
-
-			if holdshare.Amount == 0 {
-				
-				portfolio.HoldShare = remove(portfolio.HoldShare, i)
-				portfolio.Count--
-
-			}	
+			ChangePortfolio(APIstub, args, i, &portfolio, &holdshare)	
 		} else {
 			k++
 		}
@@ -205,12 +198,20 @@ func ChangePortfolio(APIstub shim.ChaincodeStubInterface, args []string, i int, 
 	holdshare.EndDate = args[0]
 	holdshare.RecentPrice, _ = strconv.Atoi(args[2])
 	holdshare.ChangeAmount, _ = strconv.Atoi(args[3])
-	holdshare.Avg_price = (holdshare.Amount * holdshare.Avg_price + holdshare.RecentPrice * holdshare.ChangeAmount) / (holdshare.Amount + holdshare.ChangeAmount)
 	holdshare.Amount = holdshare.Amount + holdshare.ChangeAmount
 
-	portfolio.HoldShare = remove(portfolio.HoldShare, i)
-	portfolio.HoldShare = append(portfolio.HoldShare, *holdshare)
-	portfolio.Cash -= holdshare.ChangeAmount * holdshare.RecentPrice
+	if holdshare.Amount == 0 {
+				
+		portfolio.HoldShare = remove(portfolio.HoldShare, i)
+		portfolio.Count--
+		portfolio.Cash -= holdshare.ChangeAmount * holdshare.RecentPrice
+
+	}else{
+		holdshare.Avg_price = ((holdshare.Amount - holdshare.ChangeAmount) * holdshare.Avg_price + holdshare.RecentPrice * holdshare.ChangeAmount) / holdshare.Amount
+		portfolio.HoldShare = remove(portfolio.HoldShare, i)
+		portfolio.HoldShare = append(portfolio.HoldShare, *holdshare)
+		portfolio.Cash -= holdshare.ChangeAmount * holdshare.RecentPrice
+	}
 }
 
 func CreatePortfolio(APIstub shim.ChaincodeStubInterface, args []string, portfolio *Portfolio, holdshare *HoldShare) {
